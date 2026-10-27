@@ -21,9 +21,24 @@ class loginRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'email' => 'required|email',
             'password' => 'required'
+        ];
+
+        // Si el reCAPTCHA está configurado, se valida en el servidor
+        if (config('captcha.sitekey') && config('captcha.secret')) {
+            $rules['g-recaptcha-response'] = 'required|captcha';
+        }
+
+        return $rules;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'g-recaptcha-response.required' => 'Marca la casilla "No soy un robot".',
+            'g-recaptcha-response.captcha' => 'No se pudo verificar el captcha. Inténtalo de nuevo.',
         ];
     }
 }

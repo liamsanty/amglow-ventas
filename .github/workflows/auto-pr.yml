@@ -25,6 +25,13 @@ jobs:
         run: |
           if [ "$BRANCH" = "develop" ]; then BASE=main; else BASE=develop; fi
 
+          # Sin commits nuevos respecto a la base no hay nada que proponer
+          AHEAD=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BASE...$BRANCH" --jq .ahead_by)
+          if [ "$AHEAD" = "0" ]; then
+            echo "$BRANCH no tiene cambios nuevos respecto a $BASE"
+            exit 0
+          fi
+
           if [ -n "$(gh pr list --head "$BRANCH" --base "$BASE" --state open --json number --jq '.[].number')" ]; then
             echo "Ya hay un PR abierto de $BRANCH a $BASE"
             exit 0
