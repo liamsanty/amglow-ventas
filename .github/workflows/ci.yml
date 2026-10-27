@@ -1,8 +1,12 @@
-# Pruebas: corren en cada pull request a develop o main.
+# Pruebas: corren en cada push a ramas de trabajo y a develop, y en los PR hechos a mano.
+# (Los PR que abre auto-pr.yml no disparan workflows, por eso también corre en push;
+#  el resultado aparece igual dentro del PR porque es el mismo commit.)
 # Si fallan, el PR queda marcado en rojo y no se debe mergear.
 name: Pruebas
 
 on:
+  push:
+    branches-ignore: [main]
   pull_request:
     branches: [develop, main]
 
