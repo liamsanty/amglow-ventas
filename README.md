@@ -174,7 +174,7 @@ git push -u origin fix/nombre-del-cambio
 | Archivo | Cuándo corre | Qué hace |
 |---|---|---|
 | `auto-pr.yml` | Push a cualquier rama menos `main` | Abre el PR a `develop` (o de `develop` a `main`) si no existe |
-| `ci.yml` | En cada PR a `develop` o `main` | Instala dependencias, revisa sintaxis PHP y corre `php artisan test` |
+| `ci.yml` | En cada push a ramas de trabajo y a `develop` (el resultado se ve en el PR) | Instala dependencias, revisa sintaxis PHP y corre `php artisan test` |
 | `deploy.yml` | Push a `main` (o a mano desde *Actions*) | Sube por FTP a `/htdocs/` **solo los archivos que cambiaron** |
 
 ### Qué NO sube el despliegue automático
