@@ -45,8 +45,8 @@ No usa Vite ni Node para compilar: el CSS y JS ya están en `public/`.
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/liamsanty/amglow-ventas..git
-cd amglow-ventas.
+git clone https://github.com/liamsanty/amglow-ventas.git
+cd amglow-ventas
 
 # 2. Instalar dependencias de PHP
 composer install
