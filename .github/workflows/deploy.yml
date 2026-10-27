@@ -1,0 +1,43 @@
+# Despliegue: cada vez que algo llega a main se sube a InfinityFree por FTP.
+# Solo sube los archivos que cambiaron desde el último despliegue.
+# No sube vendor/ (ya está en el servidor), ni .env, ni storage/ (los conserva el servidor).
+name: Desplegar en InfinityFree
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Subir por FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          server-dir: /htdocs/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            vendor/**
+            node_modules/**
+            tests/**
+            storage/**
+            public/storage/**
+            bootstrap/cache/*.php
+            .env
+            .env.*
+            database/sistema_ventas.sql
+            phpunit.xml
+            README.md

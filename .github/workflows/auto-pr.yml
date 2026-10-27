@@ -1,0 +1,41 @@
+# Abre pull requests automáticamente:
+#   - push a cualquier rama de trabajo  -> PR hacia develop
+#   - push a develop                    -> PR hacia main
+# Si el PR ya existe, no hace nada (los commits nuevos se suman al mismo PR).
+name: Abrir PR automático
+
+on:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Crear PR si no existe
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          if [ "$BRANCH" = "develop" ]; then BASE=main; else BASE=develop; fi
+
+          if [ -n "$(gh pr list --head "$BRANCH" --base "$BASE" --state open --json number --jq '.[].number')" ]; then
+            echo "Ya hay un PR abierto de $BRANCH a $BASE"
+            exit 0
+          fi
+
+          if [ "$BASE" = "main" ]; then
+            TITLE="Publicar develop en producción"
+            BODY="Al mergear este PR se despliega automáticamente en InfinityFree."
+          else
+            TITLE="$(git log -1 --format=%s)"
+            BODY="PR automático de \`$BRANCH\` a \`develop\`."
+          fi
+
+          gh pr create --head "$BRANCH" --base "$BASE" --title "$TITLE" --body "$BODY"

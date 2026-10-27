@@ -132,12 +132,65 @@ InfinityFree no tiene consola (no se puede correr `php artisan` ni `composer`) y
    SESSION_SECURE_COOKIE=false   # cambiar a true cuando se active el SSL
    ```
 
-### Cómo publicar cambios
+---
 
-1. Hacer el cambio en el código y subirlo a este repositorio.
-2. Conectarse por FTP con **WinSCP** o FileZilla (`ftpupload.net`, usuario `if0_43281187`).
-3. Usar **Sincronizar** (WinSCP) para subir a `htdocs/` solo los archivos que cambiaron. No hace falta volver a subir todo.
-4. Si el cambio incluye una migración nueva, aplicarla desde phpMyAdmin, ya que no hay consola.
+## Flujo de trabajo (ramas, PR y despliegue automático)
+
+```
+rama-de-trabajo ──push──► PR automático a develop ──(pruebas ✅)──► merge
+develop ────────push──► PR automático a main ─────(pruebas ✅)──► merge
+main ───────────push──► despliegue automático a InfinityFree
+```
+
+| Rama | Para qué |
+|---|---|
+| `main` | Lo que está publicado. Cada cambio que llega aquí se despliega solo. |
+| `develop` | Donde se juntan los cambios antes de publicarlos. |
+| `feature/...`, `fix/...` | Una rama por cada cambio. |
+
+### Paso a paso para hacer un cambio
+
+```bash
+git checkout develop
+git pull
+git checkout -b fix/nombre-del-cambio   # nueva rama para el cambio
+
+# ... editar el código ...
+
+git add .
+git commit -m "Describe el cambio"
+git push -u origin fix/nombre-del-cambio
+```
+
+1. Al hacer `push`, GitHub **abre solo un PR** de tu rama hacia `develop`.
+2. En el PR corren las **pruebas** (`.github/workflows/ci.yml`). Si salen en verde ✅, se hace **Merge**.
+3. Al llegar el cambio a `develop`, se **abre solo otro PR** de `develop` hacia `main`.
+4. Cuando quieras publicar, revisas ese PR y haces **Merge**.
+5. Al llegar a `main`, se **despliega solo** en InfinityFree (`.github/workflows/deploy.yml`).
+
+### Qué hace cada workflow
+
+| Archivo | Cuándo corre | Qué hace |
+|---|---|---|
+| `auto-pr.yml` | Push a cualquier rama menos `main` | Abre el PR a `develop` (o de `develop` a `main`) si no existe |
+| `ci.yml` | En cada PR a `develop` o `main` | Instala dependencias, revisa sintaxis PHP y corre `php artisan test` |
+| `deploy.yml` | Push a `main` (o a mano desde *Actions*) | Sube por FTP a `/htdocs/` **solo los archivos que cambiaron** |
+
+### Qué NO sube el despliegue automático
+
+- `vendor/`: ya está en el servidor. Si cambias dependencias (`composer.json`), hay que subir `vendor/` a mano (comprimida en zip).
+- `.env` y `storage/`: el servidor conserva los suyos.
+- Migraciones nuevas: no hay consola en InfinityFree, así que se aplican a mano desde phpMyAdmin.
+
+### Configuración necesaria en GitHub (una sola vez)
+
+- **Secrets** (*Settings → Secrets and variables → Actions*): `FTP_SERVER` = `ftpupload.net`, `FTP_USERNAME` = `if0_43281187`, `FTP_PASSWORD` = contraseña de la cuenta de InfinityFree.
+- *Settings → Actions → General*: activar **"Allow GitHub Actions to create and approve pull requests"**.
+- *Settings → Branches*: proteger `main` y `develop` (exigir PR y que pasen las pruebas).
+
+### Subida manual (alternativa)
+
+Con **WinSCP** (`ftpupload.net`, usuario `if0_43281187`), el botón **Sincronizar** sube a `htdocs/` solo lo que cambió.
 
 ---
 
