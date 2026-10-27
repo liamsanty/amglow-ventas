@@ -60,8 +60,11 @@
                                                 
                                             </div>
                                             
-                                            {!! NoCaptcha::renderJs() !!}
-                                            {!! NoCaptcha::display() !!} 
+                                            {{-- El reCAPTCHA solo se muestra si hay llaves configuradas en el .env --}}
+                                            @if (config('captcha.sitekey') && config('captcha.secret'))
+                                                {!! NoCaptcha::renderJs() !!}
+                                                {!! NoCaptcha::display() !!}
+                                            @endif
                                         </form>
                                     </div>
                                     

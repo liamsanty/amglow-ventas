@@ -2,7 +2,7 @@
 
 Sistema web de ventas e inventario para una tienda de productos de cuidado personal. Permite gestionar productos, compras, ventas, clientes, proveedores, inventario, usuarios y roles, y generar comprobantes y reportes en PDF.
 
-**Demo desplegada:** http://amglow.infinityfreeapp.com
+**Demo desplegada:** https://amglow.infinityfreeapp.com
 
 > Es un despliegue de prueba en hosting gratuito. Puede tardar en cargar la primera vez.
 
@@ -85,7 +85,7 @@ php artisan serve
 
 6. Abrir http://localhost:8000 e iniciar sesión con un usuario de la base de datos.
 
-> **reCAPTCHA (opcional):** el login muestra un reCAPTCHA de Google. Para que se vea sin error, pon en `.env` las variables `NOCAPTCHA_SITEKEY` y `NOCAPTCHA_SECRET` de un sitio registrado en https://www.google.com/recaptcha/admin con tu dominio (o `localhost`).
+> **reCAPTCHA (opcional):** si `NOCAPTCHA_SITEKEY` y `NOCAPTCHA_SECRET` están vacías, el login funciona sin captcha. Si se llenan con las llaves de un sitio registrado en https://www.google.com/recaptcha/admin (reCAPTCHA v2, casilla "No soy un robot", con tu dominio y `localhost`), el captcha se muestra y se valida en el servidor.
 
 ---
 
@@ -95,7 +95,7 @@ La demo está en **InfinityFree** (hosting PHP + MySQL gratuito):
 
 | Dato | Valor |
 |---|---|
-| URL | http://amglow.infinityfreeapp.com |
+| URL | https://amglow.infinityfreeapp.com |
 | Servidor MySQL | `sql308.infinityfree.com` |
 | Base de datos | `if0_43281187_venta_sis` |
 | FTP | `ftpupload.net`, puerto 21 |
@@ -123,13 +123,14 @@ InfinityFree no tiene consola (no se puede correr `php artisan` ni `composer`) y
    ```env
    APP_ENV=production
    APP_DEBUG=false
-   APP_URL=http://amglow.infinityfreeapp.com
+   APP_URL=https://amglow.infinityfreeapp.com
    DB_HOST=sql308.infinityfree.com
    DB_DATABASE=if0_43281187_venta_sis
    DB_USERNAME=if0_43281187
    DB_PASSWORD=********
    PUBLIC_DISK_ROOT=public/storage
-   SESSION_SECURE_COOKIE=false   # cambiar a true cuando se active el SSL
+   FORCE_HTTPS=true
+   SESSION_SECURE_COOKIE=true
    ```
 
 ---
@@ -205,7 +206,7 @@ Con **WinSCP** (`ftpupload.net`, usuario `if0_43281187`), el botón **Sincroniza
 
 - **Usuarios:** todavía no existen las pantallas para crear y editar usuarios (`userController` solo lista), ni la opción para que un administrador restablezca la contraseña de otro.
 - **Permisos por rol:** los middlewares de permisos están comentados, así que cualquier usuario con sesión iniciada entra a todos los módulos.
-- **reCAPTCHA:** se muestra en el login pero no se valida en el servidor.
+- **reCAPTCHA:** desactivado en la demo hasta registrar llaves propias para el dominio.
 - **Inventario:** la ruta `/inventario/create` no tiene pantalla.
 
 ## Estructura principal
