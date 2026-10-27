@@ -1,0 +1,169 @@
+# AmGlow · Sistema de Ventas
+
+Sistema web de ventas e inventario para una tienda de productos de cuidado personal. Permite gestionar productos, compras, ventas, clientes, proveedores, inventario, usuarios y roles, y generar comprobantes y reportes en PDF.
+
+**Demo desplegada:** http://amglow.infinityfreeapp.com
+
+> Es un despliegue de prueba en hosting gratuito. Puede tardar en cargar la primera vez.
+
+---
+
+## Módulos
+
+| Módulo | Qué hace |
+|---|---|
+| Panel | Pantalla de inicio después del login |
+| Categorías y marcas | Clasificación de productos |
+| Productos | Alta, edición y baja, con foto y reporte en PDF |
+| Clientes y proveedores | Personas naturales o jurídicas con su documento |
+| Compras | Registro de compras a proveedores |
+| Ventas | Registro de ventas, comprobante en PDF y consulta por rango de fechas |
+| Inventario | Existencias por producto y ubicación |
+| Usuarios y roles | Roles con permisos (Spatie Laravel Permission) |
+
+## Tecnologías
+
+- **PHP 8.2+** con **Laravel 11**
+- **MySQL / MariaDB**
+- Blade + Bootstrap 5 (plantilla SB Admin), DataTables y Font Awesome
+- `barryvdh/laravel-dompdf` para los PDF
+- `spatie/laravel-permission` para roles y permisos
+- `anhskohbo/no-captcha` para el reCAPTCHA del login
+
+No usa Vite ni Node para compilar: el CSS y JS ya están en `public/`.
+
+---
+
+## Correr el proyecto en local
+
+### Requisitos
+- PHP 8.2 o superior con las extensiones `pdo_mysql`, `mbstring`, `gd`, `zip` y `bcmath`
+- Composer
+- MySQL o MariaDB (por ejemplo con XAMPP o Laragon)
+
+### Pasos
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/liamsanty/amglow-ventas..git
+cd amglow-ventas.
+
+# 2. Instalar dependencias de PHP
+composer install
+
+# 3. Crear el archivo de configuración y la llave de la app
+cp .env.example .env
+php artisan key:generate
+```
+
+4. Crear una base de datos vacía, por ejemplo `venta_sis`, y poner sus datos en `.env`:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=venta_sis
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+5. Cargar la base de datos con datos de ejemplo e iniciar la app:
+
+```bash
+# Importa el respaldo con datos de ejemplo (usuarios, roles, permisos, productos...)
+mysql -u root venta_sis < database/sistema_ventas.sql
+
+# Aplica las migraciones que el respaldo no tenga
+php artisan migrate
+
+# Enlace para que se vean las fotos de productos
+php artisan storage:link
+
+# Levantar el servidor
+php artisan serve
+```
+
+6. Abrir http://localhost:8000 e iniciar sesión con un usuario de la base de datos.
+
+> **reCAPTCHA (opcional):** el login muestra un reCAPTCHA de Google. Para que se vea sin error, pon en `.env` las variables `NOCAPTCHA_SITEKEY` y `NOCAPTCHA_SECRET` de un sitio registrado en https://www.google.com/recaptcha/admin con tu dominio (o `localhost`).
+
+---
+
+## Despliegue (InfinityFree)
+
+La demo está en **InfinityFree** (hosting PHP + MySQL gratuito):
+
+| Dato | Valor |
+|---|---|
+| URL | http://amglow.infinityfreeapp.com |
+| Servidor MySQL | `sql308.infinityfree.com` |
+| Base de datos | `if0_43281187_venta_sis` |
+| FTP | `ftpupload.net`, puerto 21 |
+
+Las contraseñas **no** están en el repositorio: se configuran en el `.env` del servidor y en el panel de InfinityFree.
+
+### Cómo se preparó
+
+InfinityFree no tiene consola (no se puede correr `php artisan` ni `composer`) y su carpeta pública es `htdocs/`. Por eso:
+
+1. **Se sube todo el proyecto a `htdocs/`, incluida la carpeta `vendor/`**, ya que no se puede correr `composer install` en el servidor.
+2. **Se agrega un `.htaccess` en la raíz de `htdocs/`** que manda todas las peticiones a `public/`. Así `.env`, `vendor/` y `storage/` nunca quedan expuestos:
+
+   ```apache
+   <IfModule mod_rewrite.c>
+       RewriteEngine On
+       RewriteRule ^(.*)$ public/$1 [L]
+   </IfModule>
+   ```
+
+3. **Fotos de productos sin enlace simbólico:** InfinityFree no permite `php artisan storage:link`. Con `PUBLIC_DISK_ROOT=public/storage` en el `.env`, las fotos se guardan directamente en `public/storage/productos/`, que debe existir.
+4. **La base de datos** se importó desde phpMyAdmin con un respaldo actualizado (el `.sql` del repo más las migraciones que le faltaban).
+5. **`.env` de producción** (resumen):
+
+   ```env
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=http://amglow.infinityfreeapp.com
+   DB_HOST=sql308.infinityfree.com
+   DB_DATABASE=if0_43281187_venta_sis
+   DB_USERNAME=if0_43281187
+   DB_PASSWORD=********
+   PUBLIC_DISK_ROOT=public/storage
+   SESSION_SECURE_COOKIE=false   # cambiar a true cuando se active el SSL
+   ```
+
+### Cómo publicar cambios
+
+1. Hacer el cambio en el código y subirlo a este repositorio.
+2. Conectarse por FTP con **WinSCP** o FileZilla (`ftpupload.net`, usuario `if0_43281187`).
+3. Usar **Sincronizar** (WinSCP) para subir a `htdocs/` solo los archivos que cambiaron. No hace falta volver a subir todo.
+4. Si el cambio incluye una migración nueva, aplicarla desde phpMyAdmin, ya que no hay consola.
+
+---
+
+## Seguridad
+
+- Todas las pantallas del sistema requieren sesión iniciada; sin sesión se redirige a `/login`.
+- El login se bloquea un minuto después de 5 intentos fallidos.
+- Cada usuario solo puede cambiar **su propia** contraseña, desde el menú del ícono de usuario → *Cambiar contraseña*.
+- En producción `APP_DEBUG=false`, para no mostrar errores internos.
+
+## Pendientes conocidos
+
+- **Usuarios:** todavía no existen las pantallas para crear y editar usuarios (`userController` solo lista), ni la opción para que un administrador restablezca la contraseña de otro.
+- **Permisos por rol:** los middlewares de permisos están comentados, así que cualquier usuario con sesión iniciada entra a todos los módulos.
+- **reCAPTCHA:** se muestra en el login pero no se valida en el servidor.
+- **Inventario:** la ruta `/inventario/create` no tiene pantalla.
+
+## Estructura principal
+
+```
+app/Http/Controllers   Lógica de cada módulo
+app/Models             Modelos (Producto, Venta, Compra, Cliente, ...)
+database/migrations    Estructura de la base de datos
+database/seeders       Datos iniciales
+database/sistema_ventas.sql   Respaldo con datos de ejemplo
+resources/views        Pantallas (Blade)
+routes/web.php         Rutas del sistema
+public/                CSS, JS e imágenes
+```
